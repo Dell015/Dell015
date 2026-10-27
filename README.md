@@ -22,9 +22,9 @@
 
 | Project | What it is | Built with | Status |
 | --- | --- | --- | --- |
-| [**Karela**](https://karela-phi.vercel.app) | Running app with an AI coach (Ani) and RPG-style progression. Turns everyday exercise into reports that help your city. I'm lead developer and architect for a team of 5 plus an adviser. | React Native, Expo, TypeScript, Supabase + PostGIS, Gemini | Thesis build, in development. [Repo](https://github.com/Dell015/karela) |
-| [**Tag.Ai**](https://tag-ai-omega.vercel.app) | Party game with online rooms, decks and coins. | Next.js, TypeScript, Supabase | Early beta |
+| [**Karela**](https://karela-phi.vercel.app) | Running app with an AI coach (Ani) and RPG-style progression. Turns everyday exercise into reports that help your city. | React Native, Expo, TypeScript, Supabase + PostGIS, Gemini | Thesis build, in development. [Repo](https://github.com/Dell015/karela) |
+| [**Tag.Ai**](https://tag-ai-omega.vercel.app) | A drinking and dare card game built around one phone, or a whole table of phones. Friends join an online room, set a shared pot, and play themed decks where each card costs a coin. A heat meter steers how bold the next card gets. Accounts and rooms run on a live Supabase backend. | Next.js, TypeScript, Supabase | Early beta |
 | **Icarus** | Submitting work is easy. Understanding it is the proof. Icarus questions you in the Socratic way, and a gate stays shut until you can defend every flaw it finds in your thinking. | Web, solo | MVP stage |
-| **garahe** | Private vehicle history and maintenance tracker. | Web, Three.js, solo | In development |
+| **garahe** | A private web app that keeps your whole vehicle history in one place: repairs, costs and decisions that belong to you instead of a shoebox of receipts. Being built in three phases: logging and reminders first, then a 3D vehicle viewer with clickable parts, then an AI diagnostic assistant that learns from your own vehicle's history. | Web, Three.js, solo | In development |
 
 <sub>Philippine Startup Challenge 10 regional finalist · IgnITE Start-Up Competition 1st runner-up · 2025</sub>
