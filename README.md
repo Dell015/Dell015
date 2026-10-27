@@ -1,9 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Dell015/Dell015/output/github-snake-dark.svg">
-  <img alt="My GitHub contribution graph, with a snake eating the contributions" src="https://raw.githubusercontent.com/Dell015/Dell015/output/github-snake.svg" width="880">
-</picture>
+<img src="https://raw.githubusercontent.com/Dell015/Dell015/output/snake.svg" alt="Pixel snake eating my GitHub contributions and growing longer with every one" width="880">
 
 <br><br>
 
@@ -25,9 +22,9 @@
 
 | Project | What it is | Built with | Status |
 | --- | --- | --- | --- |
-| [**Karela**](https://karela-phi.vercel.app) | Mobile app. I led a team of 5. | React Native, Supabase, Gemini API | Live |
+| [**Karela**](https://karela-phi.vercel.app) | Running app with an AI coach (Ani) and RPG-style progression. Turns everyday exercise into reports that help your city. I'm lead developer and architect for a team of 5 plus an adviser. | React Native, Expo, TypeScript, Supabase + PostGIS, Gemini | Thesis build, in development. [Repo](https://github.com/Dell015/karela) |
 | [**Tag.Ai**](https://tag-ai-omega.vercel.app) | Party game with online rooms, decks and coins. | Next.js, TypeScript, Supabase | Early beta |
-| **Icarus** | Quizzes you on the work you submit to prove you understand it. | Web, solo | MVP stage |
+| **Icarus** | Submitting work is easy. Understanding it is the proof. Icarus questions you in the Socratic way, and a gate stays shut until you can defend every flaw it finds in your thinking. | Web, solo | MVP stage |
 | **garahe** | Private vehicle history and maintenance tracker. | Web, Three.js, solo | In development |
 
 <sub>Philippine Startup Challenge 10 regional finalist · IgnITE Start-Up Competition 1st runner-up · 2025</sub>

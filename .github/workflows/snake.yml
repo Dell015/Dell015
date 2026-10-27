@@ -15,12 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: Platane/snk/svg-only@v3
-        with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            dist/github-snake.svg
-            dist/github-snake-dark.svg?palette=github-dark
+      - uses: actions/checkout@v4
+
+      - name: Build the snake
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          python3 scripts/snake.py "${{ github.repository_owner }}" dist/snake.svg
 
       - uses: crazy-max/ghaction-github-pages@v3.1.0
         with:
