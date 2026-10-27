@@ -87,25 +87,87 @@ GREEN = {1: "#0e4429", 2: "#006d32", 3: "#26a641", 4: "#39d353"}
 EMPTY = "#1b1b20"; SNAKE = "#D11A2A"; HEAD = "#ff4b5a"; START_LEN = 4
 CELL, GAP, STEP = 13, 3, 0.07
 
+def simulate(grid, ncols):
+    """Chase the nearest contribution, avoid trapping itself. Returns the list of cells visited (one per step)."""
+    import random
+    from collections import deque
+    rng = random.Random(7)
+    def nbrs(p):
+        c, r = p
+        for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            q = (c + d[0], r + d[1])
+            if q in grid: yield q
+    food = {p for p, lv in grid.items() if lv}
+    start = (0, 0) if (0, 0) in grid else next(iter(grid))
+    body = deque([start]); path = [start]; lens = [START_LEN]
+    length = START_LEN; eaten = 0
+    def reach(head, blocked, cap):
+        seen = {head}; dq = deque([head])
+        while dq and len(seen) < cap:
+            p = dq.popleft()
+            for q in nbrs(p):
+                if q not in seen and q not in blocked: seen.add(q); dq.append(q)
+        return len(seen)
+    for _ in range(3000):
+        if not food: break
+        head = body[0]
+        grow = False
+        # after this move the tail leaves unless we are still growing to `length`
+        def blocked_after(newhead):
+            cells = [newhead] + list(body)
+            keep = cells[:length]
+            return set(keep[1:]) , keep
+        # BFS from head over cells free of the body (tail is free because it moves)
+        occ = set(list(body)[: max(length - 1, 0)])
+        prev = {head: None}; dist = {head: 0}; dq = deque([head]); found = []
+        while dq:
+            p = dq.popleft()
+            nb = list(nbrs(p)); rng.shuffle(nb)
+            for q in nb:
+                if q in prev or q in occ: continue
+                prev[q] = p; dist[q] = dist[p] + 1; dq.append(q)
+                if q in food: found.append(q)
+        move = None
+        for tgt in found[:6]:
+            p = tgt
+            while prev[p] != head: p = prev[p]
+            blk, keep = blocked_after(p)
+            if reach(p, blk, length + 4) >= min(length + 4, 24):
+                move = p; break
+        if move is None:
+            options = []
+            for q in nbrs(head):
+                if q in occ: continue
+                blk, keep = blocked_after(q)
+                options.append((reach(q, blk, 400), rng.random(), q))
+            if not options:
+                # boxed in: shed the back half of the body and keep going
+                length = max(START_LEN, length // 2)
+                while len(body) > length: body.pop()
+                continue
+            move = max(options)[2]
+        body.appendleft(move)
+        if move in food:
+            food.discard(move); length += 1; eaten += 1
+        while len(body) > length: body.pop()
+        path.append(move); lens.append(length)
+    return path, lens
+
 def build(cal):
     weeks = cal["weeks"]
     grid = {}
     for c, wk in enumerate(weeks):
         for d in wk["contributionDays"]:
             grid[(c, d["weekday"])] = LV[d["contributionLevel"]]
-    cells = []  # snake path: sweep along each row, left to right, then right to left
-    for r in range(7):
-        cols = [c for c in range(len(weeks)) if (c, r) in grid]
-        if r % 2: cols = cols[::-1]
-        for c in cols: cells.append((c, r, grid[(c, r)]))
+    route, lens = simulate(grid, len(weeks))
+    cells, seen_food = [], set()
+    for p in route:
+        lv = grid[p]
+        if lv and p not in seen_food: seen_food.add(p); cells.append((p[0], p[1], lv))
+        else: cells.append((p[0], p[1], 0))
     n = len(cells)
-    # length after eating cell i, then free time of every cell
-    length, eaten_at = [], {}
-    cur = START_LEN
-    for i, (_, _, lv) in enumerate(cells):
-        if lv: cur += 1; eaten_at[i] = i
-        length.append(cur)
-    final = cur
+    length = lens
+    final = lens[-1]
     def L(j): return length[j] if j < n else final
     free = []
     j = 0
@@ -126,16 +188,19 @@ def build(cal):
     o.append(ptext("CONTRIBUTIONS", pad, 18, 2, "#8a8a93"))
     o.append(ptext(f"{cal['totalContributions']} IN THE LAST YEAR", pad + 13 * 12 + 14, 18, 2, "#f2f2f2"))
     def pos(c, r): return pad + c * (CELL + GAP), top + r * (CELL + GAP)
-    # background cells + food
+    # background cells + food (food disappears the first time the head reaches it)
+    eat_step = {}
     for i, (c, r, lv) in enumerate(cells):
+        if lv: eat_step[(c, r)] = i
+    for (c, r), lv in grid.items():
         x, y = pos(c, r)
-        if lv == 0:
-            o.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{EMPTY}"/>')
-        else:
-            te = (i + 1) * STEP / T
+        o.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{EMPTY}"/>')
+        if lv and (c, r) in eat_step:
+            te = (eat_step[(c, r)] + 1) * STEP / T
             o.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{GREEN[lv]}">'
                      f'<animate attributeName="opacity" values="1;0;0" keyTimes="0;{te:.5f};1" dur="{T:.2f}s" repeatCount="indefinite" calcMode="discrete"/></rect>')
-            o.insert(-1, f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{EMPTY}"/>')
+        elif lv:
+            o.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{GREEN[lv]}"/>')
     # snake body: each path cell is red from the step the head enters it until the tail leaves it
     for i, (c, r, lv) in enumerate(cells):
         x, y = pos(c, r)
