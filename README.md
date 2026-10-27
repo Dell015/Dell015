@@ -4,7 +4,7 @@
 
 <br><br>
 
-<img src="./assets/banner.svg" alt="Randel Serafica, full-stack developer. Web, mobile, 3D and backend." width="880">
+<a href="https://del-portfolio-two.vercel.app/"><img src="./assets/banner.svg" alt="Randel Serafica, full-stack developer. Web, mobile, 3D and backend. Click to open my portfolio." width="880"></a>
 
 <br><br>
 
