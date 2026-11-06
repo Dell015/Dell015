@@ -153,6 +153,85 @@ def simulate(grid, ncols):
         path.append(move); lens.append(length)
     return path, lens
 
+
+CUR = ["1000000","1100000","1210000","1221000","1222100","1222210",
+       "1222221","1222111","1211000","1101100","1000110","0000110"]
+CREW = [("RANDEL", "#D11A2A"), ("UI", "#22d3ee"), ("UX", "#facc15"), ("DB", "#a78bfa"), ("ANI", "#f472b6")]
+
+def cursor_svg(name, color, keys, T):
+    """keys: [(t_seconds, x, y)] -> a named multiplayer cursor gliding through them."""
+    keys = sorted(keys)
+    if keys[0][0] > 0: keys.insert(0, (0.0,) + keys[0][1:])
+    if keys[-1][0] < T: keys.append((T,) + keys[-1][1:])
+    kt = ";".join(f"{min(1, max(0, k[0] / T)):.5f}" for k in keys)
+    vs = ";".join(f"{k[1]:.0f} {k[2]:.0f}" for k in keys)
+    out_, in_ = [], []
+    for r, row in enumerate(CUR):
+        for c, ch in enumerate(row):
+            if ch == "1": out_.append(f"M{c*2} {r*2}h2v2h-2z")
+            elif ch == "2": in_.append(f"M{c*2} {r*2}h2v2h-2z")
+    tagw = width(name, 1) + 12
+    return (f'<g><animateTransform attributeName="transform" type="translate" dur="{T:.2f}s" repeatCount="indefinite" '
+            f'keyTimes="{kt}" values="{vs}"/>'
+            f'<path d="{"".join(in_)}" fill="{color}"/><path d="{"".join(out_)}" fill="{WHITE}"/>'
+            f'<g transform="translate(12 22)"><rect width="{tagw}" height="15" fill="{color}"/>'
+            + ptext(name, 6, 4, 1, BG if color != "#D11A2A" else WHITE) + '</g></g>')
+
+def swarm(cells, T, pos, w, h, ncols):
+    """A design team riding along: three cursors chase the snake's head, one marquee-selects
+    patches of the graph with a size badge, one hovers the header."""
+    import random
+    rng = random.Random(15)
+    n = len(cells)
+    o = []
+    def head_xy(i):
+        c, r, _ = cells[max(0, min(n - 1, i))]
+        x, y = pos(c, r)
+        return x + CELL // 2, y + CELL // 2
+    every = 5
+    for k, (name, col) in enumerate(CREW[1:4]):
+        lag = 6 + k * 9
+        ox, oy = [(10, 8), (-26, 12), (6, -30)][k]
+        keys = []
+        for i in range(0, n + every, every):
+            x, y = head_xy(i - lag)
+            keys.append((i * STEP, x + ox, y + oy))
+        o.append(cursor_svg(name, col, keys, T))
+    # marquee selections (RANDEL)
+    keys = [(0, w - 120, 8)]
+    t, gx0, gy0 = 1.0, pos(0, 0)[0], pos(0, 0)[1]
+    sels = []
+    while t < T - 3:
+        cw, ch = rng.randint(4, 12), rng.randint(2, 5)
+        c0, r0 = rng.randint(0, max(0, ncols - cw)), rng.randint(0, 7 - ch)
+        x0, y0 = pos(c0, r0)
+        x1, y1 = x0 + cw * (CELL + GAP) - GAP, y0 + ch * (CELL + GAP) - GAP
+        keys += [(t, x0 - 3, y0 - 3), (t + 0.7, x1 + 3, y1 + 3), (t + 1.8, x1 + 20, y1 + 10)]
+        sels.append((t, t + 0.7, t + 1.6, x0 - 3, y0 - 3, x1 - x0 + 6, y1 - y0 + 6, f"{cw} X {ch}"))
+        t += rng.uniform(3.0, 4.5)
+    for (a, b, e, x, y, sw, sh, lab) in sels:
+        def k(v): return f"{min(1, max(0, v / T)):.5f}"
+        vis = (f'<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;{k(a)};{k(a+.01)};{k(e)};{k(e+.01)};1" '
+               f'dur="{T:.2f}s" repeatCount="indefinite" calcMode="discrete"/>')
+        grow = lambda attr, full: (f'<animate attributeName="{attr}" values="0;0;{full};{full}" keyTimes="0;{k(a)};{k(b)};1" '
+                                   f'dur="{T:.2f}s" repeatCount="indefinite"/>')
+        bw = width(lab, 1) + 10
+        o.append(f'<g opacity="0">{vis}<rect x="{x}" y="{y}" width="0" height="0" fill="#D11A2A" fill-opacity=".1" '
+                 f'stroke="#D11A2A" stroke-width="2">{grow("width", sw)}{grow("height", sh)}</rect>'
+                 f'<g transform="translate({x + sw - bw} {y + sh + 4})" opacity="0">'
+                 f'<animate attributeName="opacity" values="0;0;1;1" keyTimes="0;{k(b)};{k(b+.01)};1" dur="{T:.2f}s" repeatCount="indefinite" calcMode="discrete"/>'
+                 f'<rect width="{bw}" height="13" fill="#D11A2A"/>' + ptext(lab, 5, 3, 1, WHITE) + '</g></g>')
+    o.append(cursor_svg(*CREW[0], keys + [(T, w - 120, 8)], T))
+    # ANI parks on the header and taps the count
+    hx = 16 + 13 * 12 + 14
+    keys = [(0, w + 40, 30)]
+    t = 0.5
+    while t < T:
+        keys += [(t, hx + rng.randint(0, 200), 30 + rng.randint(-4, 4)), (t + 2.5, hx + rng.randint(260, 420), 34)]
+        t += 5
+    o.append(cursor_svg(*CREW[4], keys, T))
+    return "".join(o)
+
 def build(cal):
     weeks = cal["weeks"]
     grid = {}
@@ -177,12 +256,12 @@ def build(cal):
     total_steps = free[-1] + 6
     T = total_steps * STEP
     pad, top = 16, 52
-    width = pad * 2 + len(weeks) * (CELL + GAP) - GAP
+    W_ = pad * 2 + len(weeks) * (CELL + GAP) - GAP
     height = top + 7 * (CELL + GAP) - GAP + pad + 6
     o = []
-    o.append(f'<rect width="{width}" height="{height}" fill="#0d0d0f"/>')
-    o.append(f'<rect x="3" y="3" width="{width-6}" height="{height-6}" fill="none" stroke="#2a2a30" stroke-width="4"/>')
-    for a in (0, width - 8):
+    o.append(f'<rect width="{W_}" height="{height}" fill="#0d0d0f"/>')
+    o.append(f'<rect x="3" y="3" width="{W_-6}" height="{height-6}" fill="none" stroke="#2a2a30" stroke-width="4"/>')
+    for a in (0, W_ - 8):
         for b in (0, height - 8):
             o.append(f'<rect x="{a}" y="{b}" width="8" height="8" fill="#0d0d0f"/>')
     o.append(ptext("CONTRIBUTIONS", pad, 18, 2, "#8a8a93"))
@@ -212,8 +291,9 @@ def build(cal):
         a = max(i * STEP / T, 0.00001); b = min((i + 1) * STEP / T, 0.99999)
         o.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" fill="{HEAD}" opacity="0">'
                  f'<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;{a:.5f};{b:.5f};1" dur="{T:.2f}s" repeatCount="indefinite" calcMode="discrete"/></rect>')
-    label = "Pixel snake eating my GitHub contributions and growing longer with every one"
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" '
+    o.append(swarm(cells, T, pos, W_, height, len(weeks)))
+    label = "Pixel snake eating my GitHub contributions while a swarm of multiplayer design cursors chases it"
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W_}" height="{height}" viewBox="0 0 {W_} {height}" '
             f'shape-rendering="crispEdges" role="img" aria-label="{label}">' + "".join(o) + "</svg>"), final
 
 if __name__ == "__main__":

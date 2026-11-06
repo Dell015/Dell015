@@ -7,7 +7,7 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-1A1A1A?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/randel-serafica/)
 [![Facebook](https://img.shields.io/badge/Facebook-1A1A1A?style=flat-square&logo=facebook&logoColor=white)](https://www.facebook.com/randel.serafica.2024)
 
-<img src="https://raw.githubusercontent.com/Dell015/Dell015/output/snake.svg" alt="Pixel snake eating my GitHub contributions and growing longer with every one" width="880">
+<img src="https://raw.githubusercontent.com/Dell015/Dell015/output/snake.svg" alt="Pixel snake eating my GitHub contributions while a swarm of design cursors chases it" width="880">
 
 </div>
 
